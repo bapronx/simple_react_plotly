@@ -4,7 +4,7 @@ import './App.css';
 import React from 'react';
 // import Plot from "react-plotly.js";
 import Plotly from "plotly.js-basic-dist";
-import {Range, sin, pi, multiply} from "mathjs";
+import {Range, sin, pi, multiply, exp, dotMultiply} from "mathjs";
 
 import createPlotlyComponent from "react-plotly.js/factory";
 const Plot = createPlotlyComponent(Plotly);
@@ -13,7 +13,8 @@ class App extends React.Component {
   constructor(props) {
     super(props);
     this.state = {
-      freq: "10"
+      freq: "10",
+      damping: 1000
     };
     this.handleInputChange = this.handleInputChange.bind(this);
   }
@@ -32,12 +33,13 @@ class App extends React.Component {
 
 
   render() {
-    var mydata = getData(this.state.freq)
+    var mydata = getData(this.state.freq, this.state.damping)
     var data = [{
       x: mydata.x,
       y: mydata.y,
       type: 'scatter',
-      mode: 'lines+markers',
+//      mode: 'lines+markers',
+      mode: 'lines',
       marker: {color: 'red'}
     }]
     var layout={width: 1000, height: 500, title: 'A Fancy Plot'}
@@ -53,11 +55,12 @@ class App extends React.Component {
   }
 }
 
-function getData(freq) {
+function getData(freq, damping) {
   const f = Number(freq)
-  var x = new Range(0, 1, 1e-2)
+  const d = Number(damping)/1000.0
+  var x = new Range(0, 1, 0.2e-2)
   x = x.toArray()
-  var y = formula(x, f)
+  var y = formula(x, f, d)
   var data = {
     x: x,
     y: y
@@ -69,7 +72,7 @@ function Param(props) {
   return (<div>
     <form>
       <label>
-        Frequency : <br/>
+        Frequency : {props.state.freq} Hz<br/>
         <input
           name="freq"
           type="range"
@@ -78,19 +81,33 @@ function Param(props) {
 
           value={props.state.freq}
           onChange={props.onChange} />
+      </label> <br/>
+      <label>
+        Damping : {props.state.damping/1000.0}<br/>
+
+        <input
+            name="damping"
+            type="range"
+            min="0"
+            max="4000"
+  
+            value={props.state.damping}
+            onChange={props.onChange} />
       </label>
       <br />
     </form>
-    <p> {props.state.freq} Hz</p>
     </div>
   );
 
 }
 
-function formula(x,f) {
-  const y = sin(multiply(x, 2*3.1416*f))
-  console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
-  console.log(y)
+function formula(x,f,d) {
+  var y = sin(multiply(x, 2*pi*f))
+  var dd = exp(multiply(x,-1*d))
+  y = dotMultiply(y, dd)
+  //y = multiply(y, )
+  //console.log("XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX")
+  //console.log(multiply(y,dd))
   return y
 }
 
